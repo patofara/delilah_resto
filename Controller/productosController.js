@@ -5,7 +5,7 @@ const models = require("../routes/models")
 const PRODUCTOS = models.Productos
 
 
-// AGREGAR PRODUCTOS
+// AGREGAR PRODUCTOS DE A 1
 // BODY => stock = "INTEGER" - favorito: BOOLEAN
 router.post("/", validacionJwt ,verificarProducto, async (req,res) => {
     if(req.user.admin==="false"){
@@ -109,7 +109,7 @@ router.post("/productosIniciales", (req,res) => {
     newProduct.forEach (e => {
        PRODUCTOS.create(e)
     });
-    res.status(200).json({exito: "Productos creados con exito"})
+    res.status(200).json({exito: "Productos creados con exito",newProduct})
 })
 
 module.exports = router

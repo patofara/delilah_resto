@@ -61,28 +61,6 @@ const datosRecibidos = (req, res, next) => {
         next()
     }
 }
-// evalua los datos a la hora de hace un login
-// const datosLogin = async (req, res, next) => {
-//     // const { email, password } = req.body
-//     // if (!email || !password) {
-//     //     res.status(400).json({
-//     //         error: 'faltan campos'
-//     //     })
-//     // }
-//     let access = await validateUser(email, password)
-//     if (access) {
-//         console.log(access);
-//         req.token = access.codigoToken
-//         req.user = access.user
-//         next()
-//     }
-//     else {
-//         res.status(401).json({
-//             error: "email o password invalidas"
-
-//         })
-//     }
-// }
 
 // verifica que el usuario se encuentra dentro de la base de datos y lo devuelve en token
 const validateUser = async (email, password) => {

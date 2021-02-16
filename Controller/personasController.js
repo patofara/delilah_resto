@@ -44,11 +44,7 @@ router.get("/:id", async (req,res) => {
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
-router.put("/:id", validacionJwt ,async (req,res) =>{
-    if(req.user.admin==="false"){
-        res.send('No está autorizado');
-        return
-    }
+router.put("/:id",async (req,res) =>{
     const actualizarUser = await USERS.update(req.body,{
         where : {id: req.params.id}
     });
