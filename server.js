@@ -11,16 +11,10 @@ app.use("/productos", productodController)
 const pedidosController = require("./Controller/pedidosController")
 app.use("/pedidos", pedidosController)
 
-// const modificarController = require("./Controller/modificarController")
-// app.use("/modificarPedido", modificarController)
-
 
 //ASSOCIATIONS
 db.Users.hasMany(db.Pedidos)
 db.Pedidos.belongsTo(db.Users)
-
-// db.Productos.hasMany(db.Detalle_Pedidos)
-// db.Detalle_Pedidos.belongsTo(db.Productos)
 
 db.Pedidos.hasMany(db.Detalle_Pedidos)
 db.Detalle_Pedidos.belongsTo(db.Pedidos)

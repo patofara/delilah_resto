@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const models = require("../routes/models")
 const USERS = models.Users
-var {datosRecibidos} = require("../routes/middlewares")
+var {datosRecibidos,tokenGenerado,validacionJwt} = require("../routes/middlewares")
 
-router.post("/", datosRecibidos, async (req,res) => {
+router.post("/", datosRecibidos,  async (req,res) => {
     const {user,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
     const newUser = {
         user,
@@ -16,14 +16,20 @@ router.post("/", datosRecibidos, async (req,res) => {
         password,
         isAdmin
     }
+    token = await tokenGenerado(nombre,isAdmin)
     if(newUser){
         const usuario = await USERS.create(newUser)
-        return res.status(200).json(usuario) 
+        return res.status(200).json({Token:token,usuario}) 
     }
     else return res.status(200).json({error: "Ha ocurrido un error..."})
 })
 
-router.get("/", async (req,res) => {
+router.get("/", validacionJwt, async (req,res) => {
+    if(req.user.admin==="false"){
+        res.send('No está autorizado');
+        return
+    }
+    console.log(req.user);
     const consulta = await USERS.findAll()
     if(consulta) return res.status(200).json(consulta) 
     return res.status(200).json({error : "No se pudo realizar la consulta..."}) 
@@ -38,7 +44,11 @@ router.get("/:id", async (req,res) => {
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
-router.put("/:id", async (req,res) =>{
+router.put("/:id", validacionJwt ,async (req,res) =>{
+    if(req.user.admin==="false"){
+        res.send('No está autorizado');
+        return
+    }
     const actualizarUser = await USERS.update(req.body,{
         where : {id: req.params.id}
     });
@@ -47,7 +57,11 @@ router.put("/:id", async (req,res) =>{
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
-router.delete("/:id", async (req,res) =>{
+router.delete("/:id",validacionJwt , async (req,res) =>{
+    if(req.user.admin==="false"){
+        res.send('No está autorizado');
+        return
+    }
     const deleteUser = await USERS.destroy({
         where : {id: req.params.id}
     });

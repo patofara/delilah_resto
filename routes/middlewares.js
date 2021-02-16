@@ -1,18 +1,7 @@
 require("dotenv").config();
-
 const jwt = require("jsonwebtoken");
 const db = require("../routes/conexion")
-require('dotenv').config()
-
-
-// require('dotenv').config()
-// const dotenv = require('db')
-// dotenv.connect({
-//     jwtClave: process.env.jwtClave
-// })
-
 var jwtClave = process.env.JWT_CLAVE;
-
 var codigoToken; 
 
 
@@ -73,27 +62,27 @@ const datosRecibidos = (req, res, next) => {
     }
 }
 // evalua los datos a la hora de hace un login
-const datosLogin = async (req, res, next) => {
-    const { email, password } = req.body
-    if (!email || !password) {
-        res.status(400).json({
-            error: 'faltan campos'
-        })
-    }
-    let access = await validateUser(email, password)
-    if (access) {
-        console.log(access);
-        req.token = access.codigoToken
-        req.user = access.user
-        next()
-    }
-    else {
-        res.status(401).json({
-            error: "email o password invalidas"
+// const datosLogin = async (req, res, next) => {
+//     // const { email, password } = req.body
+//     // if (!email || !password) {
+//     //     res.status(400).json({
+//     //         error: 'faltan campos'
+//     //     })
+//     // }
+//     let access = await validateUser(email, password)
+//     if (access) {
+//         console.log(access);
+//         req.token = access.codigoToken
+//         req.user = access.user
+//         next()
+//     }
+//     else {
+//         res.status(401).json({
+//             error: "email o password invalidas"
 
-        })
-    }
-}
+//         })
+//     }
+// }
 
 // verifica que el usuario se encuentra dentro de la base de datos y lo devuelve en token
 const validateUser = async (email, password) => {
@@ -114,8 +103,9 @@ const validateUser = async (email, password) => {
     }
 }
 
-//validacion JWT
+// Recuperacion TOKEN
 const validacionJwt = (req, res, next) => {
+    const codigoToken = req.headers.authorization.split(' ')[1];
     jwt.verify(codigoToken, jwtClave, (err, decoded) => {
         if (err) {
             res.send('No está autorizado');
@@ -130,7 +120,7 @@ const validacionJwt = (req, res, next) => {
 function tokenGenerado (nombre, isAdmin) {
     const payload = {
         nombreUser: nombre,
-        Admin: isAdmin
+        admin: isAdmin
     } 
     var token = jwt.sign(payload, jwtClave);
     return token
@@ -176,4 +166,4 @@ function validarEmail(valor) {
 }
 
 
-module.exports = {datosRecibidos,datosLogin,validacionJwt,verificarProducto,verificarPedido};
+module.exports = {datosRecibidos,verificarProducto,verificarPedido,tokenGenerado,validacionJwt};

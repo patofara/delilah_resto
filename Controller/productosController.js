@@ -1,5 +1,5 @@
 const express = require("express");
-var {verificarProducto} = require("../routes/middlewares")
+var {verificarProducto,validacionJwt} = require("../routes/middlewares")
 const router = express.Router();
 const models = require("../routes/models")
 const PRODUCTOS = models.Productos
@@ -7,7 +7,11 @@ const PRODUCTOS = models.Productos
 
 // AGREGAR PRODUCTOS
 // BODY => stock = "INTEGER" - favorito: BOOLEAN
-router.post("/", verificarProducto, async (req,res) => {
+router.post("/", validacionJwt ,verificarProducto, async (req,res) => {
+    if(req.user.admin==="false"){
+        res.send('No está autorizado');
+        return
+    }
     const {nombre,descripcion,foto,stock,favorito,precio} = req.body
     const newProduct = {
         nombre,
@@ -40,7 +44,11 @@ router.get("/:id", async (req,res) => {
 })
 
 // ACTUALIZAR UN PRODUCTO POR ID
-router.put("/:id", async (req,res) =>{
+router.put("/:id", validacionJwt, async (req,res) =>{
+    if(req.user.admin==="false"){
+        res.send('No está autorizado');
+        return
+    }
     const actualizarProducto = await PRODUCTOS.update(req.body,{
         where : {id: req.params.id}
     });
@@ -50,7 +58,11 @@ router.put("/:id", async (req,res) =>{
 })
 
 // BORRAR PRODUCTO POR ID
-router.delete("/:id", async (req,res) =>{
+router.delete("/:id", validacionJwt, async (req,res) =>{
+    if(req.user.admin==="false"){
+        res.send('No está autorizado');
+        return
+    }
     const deleteProduct = await PRODUCTOS.destroy({
         where : {id: req.params.id}
     });
