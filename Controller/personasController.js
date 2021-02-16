@@ -5,7 +5,7 @@ const USERS = models.Users
 var {datosRecibidos} = require("../routes/middlewares")
 
 router.post("/", datosRecibidos, async (req,res) => {
-    const {user,nombre,apellido,email,telefono,direccion,password} = req.body
+    const {user,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
     const newUser = {
         user,
         nombre,
@@ -13,12 +13,14 @@ router.post("/", datosRecibidos, async (req,res) => {
         email,
         telefono,
         direccion,
-        password
+        password,
+        isAdmin
     }
-    if(datosRecibidos.exito){
+    if(newUser){
         const usuario = await USERS.create(newUser)
         return res.status(200).json(usuario) 
     }
+    else return res.status(200).json({error: "Ha ocurrido un error..."})
 })
 
 router.get("/", async (req,res) => {
@@ -49,7 +51,7 @@ router.delete("/:id", async (req,res) =>{
     const deleteUser = await USERS.destroy({
         where : {id: req.params.id}
     });
-    if(deleteUser) return res.status(200).json({exito: "Borrado con exito..."})
+    if(deleteUser != 0) return res.status(200).json({exito: "Borrado con exito..."})
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
