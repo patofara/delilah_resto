@@ -16,7 +16,7 @@ router.post("/", datosRecibidos,  async (req,res) => {
         password,
         isAdmin
     }
-    token = await tokenGenerado(nombre,isAdmin)
+    token = await tokenGenerado(user,isAdmin)
     if(newUser){
         const usuario = await USERS.create(newUser)
         return res.status(200).json({Token:token,usuario}) 

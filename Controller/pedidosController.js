@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const models = require("../routes/models")
-var {verificarPedido} = require("../routes/middlewares")
+var {verificarPedido,validacionJwt} = require("../routes/middlewares")
 
 
                             // PASO 1 => CREAR PEDIDO
 
 // CREA EL PEDIDO 
 // BODY => producto : "Nombre del producto" ; cantidad : "INTEGER" ; forma_pago: "String"
-router.post("/", verificarPedido, async(req,res) => {
+router.post("/", verificarPedido, validacionJwt, async(req,res) => {
     const {producto,cantidad,forma_pago} = req.body
     if(!forma_pago){
         return res.status(400).json({error : "Por favor ingrese una forma_pago"})
@@ -16,9 +16,13 @@ router.post("/", verificarPedido, async(req,res) => {
     const articulo = await models.Productos.findOne({
         where : {nombre: producto}
     });
+    const user = await models.Users.findOne({
+        where : {user : req.user.nombreUser}
+    })
     const newPedido = {
         forma_pago,
-        total_pedido: (articulo.dataValues.precio * cantidad)
+        total_pedido: (articulo.dataValues.precio * cantidad),
+        UserId: user.dataValues.id  
     }
     
     if(newPedido){
