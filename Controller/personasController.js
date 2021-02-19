@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const models = require("../routes/models")
 const USERS = models.Users
-var {datosRecibidos,tokenGenerado,validacionJwt} = require("../routes/middlewares")
+var {datosRecibidos,tokenGenerado,validacionJwt,datosLogin} = require("../routes/middlewares")
 
 router.post("/", datosRecibidos,  async (req,res) => {
     const {user,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
@@ -16,12 +16,19 @@ router.post("/", datosRecibidos,  async (req,res) => {
         password,
         isAdmin
     }
-    token = await tokenGenerado(user,isAdmin)
+    
     if(newUser){
         const usuario = await USERS.create(newUser)
-        return res.status(200).json({Token:token,usuario}) 
+        return res.status(200).json({Usuario:usuario}) 
     }
     else return res.status(200).json({error: "Ha ocurrido un error..."})
+})
+
+router.post("/login", datosLogin, (req,res) => {
+    res.status(200).status(200).json({exito:{
+        token : req.token,
+        user:req.user
+    }})
 })
 
 router.get("/", validacionJwt, async (req,res) => {

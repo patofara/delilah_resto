@@ -38,7 +38,6 @@ router.get("/:id", async (req,res) => {
     const findProduct = await PRODUCTOS.findOne({
         where : {id: req.params.id}
     });
-    console.log(findProduct);
     if(findProduct) return res.status(200).json(findProduct)
     return res.status(400).json({error : "No se encontro ID..."})
 })

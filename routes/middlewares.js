@@ -1,6 +1,7 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const db = require("../routes/conexion")
+const models = require("../routes/models")
 var jwtClave = process.env.JWT_CLAVE;
 var codigoToken; 
 
@@ -8,8 +9,8 @@ var codigoToken;
 // VERIFICA LOS CAMPOS DE LA CREACION DE PEDIDOS
 
 const verificarPedido = (req, res, next) => {
-    const {producto,cantidad} = req.body
-    if(!producto){
+    const {idProducto,cantidad} = req.body
+    if(!idProducto){
         return res.status(400).json({error : "Por favor ingrese un nombreProducto"})
     }
     if(!cantidad){
@@ -44,17 +45,17 @@ const datosRecibidos = (req, res, next) => {
     }
     if (validarEmail(email) === false) {
         return res.status(400).json({
-            error: 'Email incorrecto'
+            error: 'Email incorrecto. Debe contener "@" y ".com"'
         })
     }
     if (validarClave(password) === false) {
         return res.status(400).json({
-            error: 'Password incorrecto'
+            error: 'Password incorrecto. Debe contener al menos 1MAYUS, 1CARACTER, 1NUM y 8 caracteres'
         })
     }
     if(telefono.length < 6 || isNaN(telefono)){
         return res.status(400).json({
-            error: 'Telefono incorrecto'
+            error: 'El telefono deben ser solo numeros y minimo 6 caracteres'
         })
     }
     else {
@@ -62,14 +63,36 @@ const datosRecibidos = (req, res, next) => {
     }
 }
 
+const datosLogin = async (req, res, next) => {
+    const {user, password } = req.body
+    if (!user || !password) {
+        res.status(400).json({
+            error: 'faltan campos'
+        })
+    }
+    let access = await validateUser(user, password)
+    if (access) {
+        req.token = access.codigoToken
+        req.user = access.user
+        next()
+    }
+    else {
+        res.status(401).json({
+            error: "user o password invalidas"
+
+        })
+    }
+}
+
 // verifica que el usuario se encuentra dentro de la base de datos y lo devuelve en token
-const validateUser = async (email, password) => {
-    const users = await db.query(`SELECT * FROM users`);
-    const userSelected = users.find(e => e.EMAIL.toUpperCase() === email.toUpperCase().trim())
+const validateUser = async (userName, password) => {
+    const userSelected = await models.Users.findOne({
+        where : {user: userName}
+    });
     if (userSelected) {
-        if (userSelected.PASSWORD.toUpperCase() == password.toUpperCase().trim()) {
-            codigoToken = await tokenGenerado(userSelected.NOMBRE, userSelected.isAdmin)
-            const user = {nombre : userSelected.NOMBRE, isAdmin: userSelected.isAdmin}   
+        if (userSelected.password.toUpperCase() == password.toUpperCase().trim()) {
+            codigoToken = await tokenGenerado(userSelected.nombre, userSelected.isAdmin)
+            const user = {nombre : userSelected.nombre, isAdmin: userSelected.isAdmin}   
             return {codigoToken, user};
         }
         else {
@@ -144,4 +167,4 @@ function validarEmail(valor) {
 }
 
 
-module.exports = {datosRecibidos,verificarProducto,verificarPedido,tokenGenerado,validacionJwt};
+module.exports = {datosRecibidos,verificarProducto,verificarPedido,tokenGenerado,validacionJwt,datosLogin};

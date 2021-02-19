@@ -8,36 +8,42 @@ var {verificarPedido,validacionJwt} = require("../routes/middlewares")
 
 // CREA EL PEDIDO 
 // BODY => producto : "Nombre del producto" ; cantidad : "INTEGER" ; forma_pago: "String"
-router.post("/", verificarPedido, validacionJwt, async(req,res) => {
-    const {producto,cantidad,forma_pago} = req.body
+router.post("/", verificarPedido, validacionJwt, async (req,res) => {
+    const {idProducto,cantidad,forma_pago} = req.body
     if(!forma_pago){
         return res.status(400).json({error : "Por favor ingrese una forma_pago"})
     }
-    const articulo = await models.Productos.findOne({
-        where : {nombre: producto}
-    });
+    var total_pedido = 0
+    for (let i = 0; i < idProducto.length; i++) {
+        const element = idProducto[i];
+        const articulo = await models.Productos.findOne({
+            where : {id: element}
+        }); 
+        if (articulo.dataValues.stock <=0) return res.status(200).json({msj: `Sin stock de ${articulo.dataValues.nombre}`})
+        total_pedido+=(articulo.dataValues.precio * cantidad[i])
+        await models.Productos.update({stock:(articulo.dataValues.stock - cantidad[i])}, {
+            where : {id: element}
+        });
+        const newDetalle = {
+            nombreProducto: articulo.dataValues.nombre,
+            cantidadProducto: cantidad[i],
+            precio: articulo.dataValues.precio * cantidad[i],
+        }
+        await models.Detalle_Pedidos.create(newDetalle)
+    }
     const user = await models.Users.findOne({
         where : {user : req.user.nombreUser}
     })
     const newPedido = {
         forma_pago,
-        total_pedido: (articulo.dataValues.precio * cantidad),
+        total_pedido,
         UserId: user.dataValues.id  
     }
     
     if(newPedido){
         const pedido = await models.Pedidos.create(newPedido)
-
-        const newDetalle = {
-            nombreProducto: producto,
-            cantidadProducto: cantidad,
-            precio: newPedido.total_pedido,
-            PedidoId: pedido.dataValues.id
-        }
-        await models.Detalle_Pedidos.create(newDetalle)
-
         return res.status(200).json({
-        Mensaje:`El pedido de ${cantidad} ${producto} se ha creado con exito.`,
+        Mensaje:`El pedido de se ha creado con exito.`,
         "Numero de pedido": pedido.dataValues.id,
         "A pagar": `$${newPedido.total_pedido}`,
         "Forma de pago": forma_pago} )
@@ -53,15 +59,22 @@ router.post("/", verificarPedido, validacionJwt, async(req,res) => {
 // PARAMS id => id del pedido al que se quiere agregar 
 // BODY => producto = "nombre del producto" - cantidad = "INTEGER"
 router.put("/:id", verificarPedido, async(req,res) => {
-    const {producto,cantidad} = req.body
+    const {idProducto,cantidad} = req.body
     const findPedido = await models.Pedidos.findOne({
         where : {id: req.params.id}
     });
     const articulo = await models.Productos.findOne({
-        where : {nombre: producto}
+        where : {id: idProducto}
+    });
+    if (articulo.dataValues.stock <= 0) {
+        res.status(200).json({msj: `Sin stock de ${articulo.dataValues.nombre}`})
+        return
+    }
+    await models.Productos.update({stock:(articulo.dataValues.stock - cantidad)}, {
+        where : {id: idProducto}
     });
     const newDetalle = {
-        nombreProducto: producto,
+        nombreProducto: articulo.dataValues.nombre,
         cantidadProducto: cantidad,
         precio: (articulo.dataValues.precio * cantidad),
         PedidoId: req.params.id
@@ -70,10 +83,10 @@ router.put("/:id", verificarPedido, async(req,res) => {
         where : {id: req.params.id}
     });
     await models.Detalle_Pedidos.create(newDetalle)
-
+    
     if (newDetalle) {
         res.status(200).json({msj:
-        `Se ha agregado ${cantidad} ${producto} a su pedido por un valor de $${newDetalle.precio}`,
+        `Se ha agregado ${cantidad} ${articulo.dataValues.nombre} a su pedido por un valor de $${newDetalle.precio}`,
         "Nuevo monto del pedido" : `$${findPedido.total_pedido + newDetalle.precio}`
     })}
     else return res.status(400).json({error: "Ha ocurrido un error..."}) 
