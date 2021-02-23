@@ -23,14 +23,14 @@ Productos.init({
 });
 
 
-class Users extends Model {}
-Users.init({
+class Usuarios extends Model {}
+Usuarios.init({
         id : {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true
         },
-        user: {type:DataTypes.STRING,allowNull: false},
+        usuario: {type:DataTypes.STRING,allowNull: false},
         nombre : {type:DataTypes.STRING,allowNull: false}, 
         apellido: {type:DataTypes.STRING,allowNull: false}, 
         email: {type:DataTypes.STRING,allowNull: false}, 
@@ -41,7 +41,7 @@ Users.init({
 
     }, {
     sequelize,
-    modelName: "Users"
+    modelName: "Usuarios"
 });
 
 
@@ -57,6 +57,18 @@ Pedidos.init({
     }, {
     sequelize,
     modelName: "Pedidos"
+});
+class Estados extends Model {}
+Estados.init({
+        id : {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true
+        },
+        estado: {type:DataTypes.STRING,allowNull: false}
+    }, {
+    sequelize,
+    modelName: "Estados"
 });
 
 
@@ -75,4 +87,4 @@ Detalle_Pedidos.init({
 
 
 
-module.exports = {Productos,Users,Detalle_Pedidos,Pedidos}
+module.exports = {Productos,Usuarios,Detalle_Pedidos,Pedidos,Estados}

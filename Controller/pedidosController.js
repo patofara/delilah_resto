@@ -7,22 +7,27 @@ var {verificarPedido,validacionJwt} = require("../routes/middlewares")
                             // PASO 1 => CREAR PEDIDO
 
 // CREA EL PEDIDO 
-// BODY => producto : "Nombre del producto" ; cantidad : "INTEGER" ; forma_pago: "String"
 router.post("/", verificarPedido, validacionJwt, async (req,res) => {
     const {idProducto,cantidad,forma_pago} = req.body
     if(!forma_pago){
         return res.status(400).json({error : "Por favor ingrese una forma_pago"})
     }
-    var total_pedido = 0
     for (let i = 0; i < idProducto.length; i++) {
         const element = idProducto[i];
-        const articulo = await models.Productos.findOne({
+        const articuloStock = await models.Productos.findOne({
             where : {id: element}
         }); 
-        if (articulo.dataValues.stock <=0) return res.status(200).json({msj: `Sin stock de ${articulo.dataValues.nombre}`})
+        if (articuloStock.dataValues.stock <=0) return res.status(200).json({msj: `Sin stock de ${articuloStock.dataValues.nombre}`})
+    }
+       
+    var total_pedido = 0
+    for (let i = 0; i < idProducto.length; i++) {
+        const articulo = await models.Productos.findOne({
+            where : {id: idProducto[i]}
+        }); 
         total_pedido+=(articulo.dataValues.precio * cantidad[i])
         await models.Productos.update({stock:(articulo.dataValues.stock - cantidad[i])}, {
-            where : {id: element}
+            where : {id: idProducto[i]}
         });
         const newDetalle = {
             nombreProducto: articulo.dataValues.nombre,
@@ -31,20 +36,24 @@ router.post("/", verificarPedido, validacionJwt, async (req,res) => {
         }
         await models.Detalle_Pedidos.create(newDetalle)
     }
-    const user = await models.Users.findOne({
-        where : {user : req.user.nombreUser}
+    const user = await models.Usuarios.findOne({
+        where : {usuario : req.user.nombreUser}
     })
     const newPedido = {
         forma_pago,
         total_pedido,
-        UserId: user.dataValues.id  
+        UsuarioId: user.dataValues.id, 
+        EstadoId: 1
     }
     
     if(newPedido){
         const pedido = await models.Pedidos.create(newPedido)
+        await models.Detalle_Pedidos.update({PedidoId:pedido.id},{
+            where : {PedidoId: null}
+        });
         return res.status(200).json({
         Mensaje:`El pedido de se ha creado con exito.`,
-        "Numero de pedido": pedido.dataValues.id,
+        "Numero de pedido": pedido.id,
         "A pagar": `$${newPedido.total_pedido}`,
         "Forma de pago": forma_pago} )
     }
@@ -52,70 +61,96 @@ router.post("/", verificarPedido, validacionJwt, async (req,res) => {
 })
 
 
-                                // PASO 2 => agrega al pedido
 
-
-// AGREGAR PRODUCTOS AL PEDIDO
-// PARAMS id => id del pedido al que se quiere agregar 
-// BODY => producto = "nombre del producto" - cantidad = "INTEGER"
-router.put("/:id", verificarPedido, async(req,res) => {
-    const {idProducto,cantidad} = req.body
-    const findPedido = await models.Pedidos.findOne({
-        where : {id: req.params.id}
-    });
-    const articulo = await models.Productos.findOne({
-        where : {id: idProducto}
-    });
-    if (articulo.dataValues.stock <= 0) {
-        res.status(200).json({msj: `Sin stock de ${articulo.dataValues.nombre}`})
+// MODIFICA ESTADO DEL PEDIDO
+router.put("/:id", validacionJwt, async(req,res) => {
+    if(req.user.isAdmin==false){
+        res.send('No está autorizado');
         return
     }
-    await models.Productos.update({stock:(articulo.dataValues.stock - cantidad)}, {
-        where : {id: idProducto}
-    });
-    const newDetalle = {
-        nombreProducto: articulo.dataValues.nombre,
-        cantidadProducto: cantidad,
-        precio: (articulo.dataValues.precio * cantidad),
-        PedidoId: req.params.id
+    const consulta = await models.Pedidos.findOne({
+        where : {id : req.params.id}
+    })
+    if (consulta.EstadoId==5) {
+        return res.send("Su pedido ya ha sido finalizado")
     }
-    await models.Pedidos.update({ total_pedido: (findPedido.total_pedido + newDetalle.precio) }, {
+    const pedido = await models.Pedidos.update({EstadoId: (consulta.EstadoId + 1)},{
         where : {id: req.params.id}
-    });
-    await models.Detalle_Pedidos.create(newDetalle)
+    })
     
-    if (newDetalle) {
-        res.status(200).json({msj:
-        `Se ha agregado ${cantidad} ${articulo.dataValues.nombre} a su pedido por un valor de $${newDetalle.precio}`,
-        "Nuevo monto del pedido" : `$${findPedido.total_pedido + newDetalle.precio}`
-    })}
-    else return res.status(400).json({error: "Ha ocurrido un error..."}) 
-
+    const preConsulta = await models.Estados.findOne({
+        where : {id:consulta.EstadoId}
+    })
+    const postConsulta = await models.Estados.findOne({
+        where : {id:(consulta.EstadoId+1)}
+    })
+    if(pedido[0]) return res.status(200).json({exito: `El pedido numero ${req.params.id} paso de ${preConsulta.dataValues.estado} a ${postConsulta.dataValues.estado}`})
+    return res.status(400).json({error : "No se encontro ID..."})
 })
 
-// CONSULTA PEDIDO CON ID 
-router.get("/:id", async (req,res) => {
+// OBTIENE TODOS LOS PEDIDOS *SOLO ADMINS*
+router.get("/", validacionJwt, async (req,res) => {
+    if(req.user.isAdmin==false){
+        res.send('No está autorizado');
+        return
+    }
+    const pedidos = await models.Pedidos.findAll()
+    let arrayPedidos = []
+    for (let i = 0; i < pedidos.length; i++) {
+        let arrayDetalle = []
+        let detalle = await models.Detalle_Pedidos.findAll({
+           where : {PedidoId: (i+1)}
+        });
+        detalle.forEach(element => {
+            arrayDetalle.push(element.cantidadProducto)
+            arrayDetalle.push(element.nombreProducto)
+        });
+        var pushPedidos = {
+            "Nro Pedido": pedidos[i].id,
+            "Valor pedido": `$${pedidos[i].total_pedido}`,
+            "Detalle": arrayDetalle.join(" ")
+        }
+        arrayPedidos.push(pushPedidos)
+    }
+    return res.status(200).json(arrayPedidos)
+})
+
+// CONSULTA PEDIDO CLIENTE
+router.get("/myPedido", validacionJwt, async (req,res) => {
+    if(req.user.isAdmin==true){
+        res.send('No está autorizado');
+        return
+    }
     let detalleProductos = []
+    const user = await models.Usuarios.findOne({
+        where : {usuario: req.user.nombreUser}
+    });
+    const pedido = await models.Pedidos.findOne({
+        where : {UserId: user.id}
+    });
+    if(!pedido){
+        return res.status(400).json({error : "No hizo ningun pedido"})
+    }
     const detalles = await models.Detalle_Pedidos.findAll({
-        where : {PedidoId: req.params.id}
+        where : {PedidoId: pedido.id}
     });
     detalles.forEach(element => {
         detalleProductos.push(element.cantidadProducto)
         detalleProductos.push(element.nombreProducto)
     });
-    const pedido = await models.Pedidos.findOne({
-        where : {id: req.params.id}
-    });
-    if(pedido) return res.status(200).json({
+    return res.status(200).json({
         Detalle: detalleProductos.join(" "),
         "A pagar": `$${pedido.total_pedido}`,
         "Medio de pago": pedido.forma_pago
     })
-    return res.status(400).json({error : "No se encontro ID..."})
 })
 
-//BORRAR PEDIDO CON ID
-router.delete("/:id", async (req,res) => {
+//BORRAR PEDIDO CON ID, *SOLO ADMIN*
+router.delete("/:id", validacionJwt,async (req,res) => {
+    if(req.user.isAdmin==false){
+        res.send('No está autorizado');
+        return
+    }
     const pedido = await models.Pedidos.destroy({
         where : {id: req.params.id}
     });

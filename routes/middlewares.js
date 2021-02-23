@@ -37,11 +37,9 @@ const verificarProducto = (req, res, next) => {
 
 // evalua que los datos que recibe al crear un usuario sean correctos
 const datosRecibidos = (req, res, next) => {
-    const {user,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
-    if (!user || !nombre || !apellido || !email || !telefono || !direccion || !password || !isAdmin) {
-        return res.status(400).json({
-            errorCampos: 'faltan campos'
-        })
+    const {usuario,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
+    if (!usuario || !nombre || !apellido || !email || !telefono || !direccion || !password || !isAdmin) {
+        return res.status(400).json("Faltan campos")
     }
     if (validarEmail(email) === false) {
         return res.status(400).json({
@@ -64,16 +62,16 @@ const datosRecibidos = (req, res, next) => {
 }
 
 const datosLogin = async (req, res, next) => {
-    const {user, password } = req.body
-    if (!user || !password) {
+    const {usuario, password } = req.body
+    if (!usuario || !password) {
         res.status(400).json({
             error: 'faltan campos'
         })
     }
-    let access = await validateUser(user, password)
+    let access = await validateUser(usuario, password)
     if (access) {
         req.token = access.codigoToken
-        req.user = access.user
+        req.user = access.userName
         next()
     }
     else {
@@ -86,13 +84,13 @@ const datosLogin = async (req, res, next) => {
 
 // verifica que el usuario se encuentra dentro de la base de datos y lo devuelve en token
 const validateUser = async (userName, password) => {
-    const userSelected = await models.Users.findOne({
-        where : {user: userName}
+    const userSelected = await models.Usuarios.findOne({
+        where : {usuario: userName}
     });
     if (userSelected) {
-        if (userSelected.password.toUpperCase() == password.toUpperCase().trim()) {
-            codigoToken = await tokenGenerado(userSelected.nombre, userSelected.isAdmin)
-            const user = {nombre : userSelected.nombre, isAdmin: userSelected.isAdmin}   
+        if (userSelected.password === password.trim()) {
+            codigoToken = await tokenGenerado(userSelected.usuario, userSelected.isAdmin)
+            const user = {userName : userSelected.usuario, isAdmin: userSelected.isAdmin}   
             return {codigoToken, user};
         }
         else {
@@ -118,10 +116,10 @@ const validacionJwt = (req, res, next) => {
     });
 }
 
-function tokenGenerado (nombre, isAdmin) {
+function tokenGenerado (user, isAdmin) {
     const payload = {
-        nombreUser: nombre,
-        admin: isAdmin
+        nombreUser: user,
+        isAdmin: isAdmin
     } 
     var token = jwt.sign(payload, jwtClave);
     return token

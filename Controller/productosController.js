@@ -5,10 +5,10 @@ const models = require("../routes/models")
 const PRODUCTOS = models.Productos
 
 
-// AGREGAR PRODUCTOS DE A 1
+// AGREGAR PRODUCTOS DE A 1, *SOLO ADMINS*
 // BODY => stock = "INTEGER" - favorito: BOOLEAN
 router.post("/", validacionJwt ,verificarProducto, async (req,res) => {
-    if(req.user.admin==="false"){
+    if(req.user.isAdmin==false){
         res.send('No está autorizado');
         return
     }
@@ -42,73 +42,39 @@ router.get("/:id", async (req,res) => {
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
-// ACTUALIZAR UN PRODUCTO POR ID
+// ACTUALIZAR UN PRODUCTO POR ID, *SOLO ADMINS*
 router.put("/:id", validacionJwt, async (req,res) =>{
-    if(req.user.admin==="false"){
+    if(req.user.isAdmin==false){
         res.send('No está autorizado');
         return
     }
     const actualizarProducto = await PRODUCTOS.update(req.body,{
         where : {id: req.params.id}
     });
-    console.log(actualizarProducto);
-    if(actualizarProducto[0]) return res.status(200).json({exito: "Acutalizado con exito..."})
+    const verProducto = await PRODUCTOS.findOne({
+        where: {id : req.params.id}
+    })
+    if(actualizarProducto[0]) return res.status(200).json({exito: "Acutalizado con exito...", verProducto})
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
-// BORRAR PRODUCTO POR ID
+// BORRAR PRODUCTO POR ID , *SOLO ADMINS*
 router.delete("/:id", validacionJwt, async (req,res) =>{
-    if(req.user.admin==="false"){
+    if(req.user.isAdmin==false){
         res.send('No está autorizado');
         return
     }
+    const verProducto = await PRODUCTOS.findOne({
+        where: {id : req.params.id}
+    })
     const deleteProduct = await PRODUCTOS.destroy({
         where : {id: req.params.id}
     });
-    if(deleteProduct) return res.status(200).json({exito: "Borrado con exito..."})
+    if(deleteProduct) return res.status(200).json({exito: "Borrado con exito...", "Producto Borrado": verProducto})
     return res.status(400).json({error : "No se encontro ID..."})
 })
 
 
-// AGREGAR PRODUCTOS INICIALES
-router.post("/productosIniciales", (req,res) => {
-    
-    const newProduct = [{
-        nombre:"Hamburguesa",
-        descripcion: "200grs Carne Vacuna",
-        foto: "https://cocina-casera.com/wp-content/uploads/2016/11/hamburguesa-queso-receta.jpg",
-        stock: "100",
-        favorito: true,
-        precio: "550"
-    },{
-        nombre : "Papas con Cheddar",
-        descripcion:"Papas con cheddar para 2",
-        foto: "https://i.pinimg.com/474x/f6/7f/11/f67f11e26a566efe86cfb3dd3c85f9ca.jpg",
-        stock: "51",
-        favorito: false,
-        precio:"470"
-    },
-    {
-        nombre: "Tequeños",
-        descripcion: "Bastones de muzzarella",
-        foto: "https://www.laylita.com/recetas/wp-content/uploads/2019/03/Tequenos-receta.jpg",
-        stock: "0",
-        favorito: true,
-        precio: "350"
-    },{
-        nombre:"Tacos",
-        descripcion: "Tacos Mexicanos de Carne Vacuna",
-        foto:"https://danzadefogones.com/wp-content/uploads/2020/04/Tacos-Veganos-5.jpg",
-        stock:"100",
-        favorito: false,
-        precio: "420"
-    }
-    
-]
-    newProduct.forEach (e => {
-       PRODUCTOS.create(e)
-    });
-    res.status(200).json({exito: "Productos creados con exito",newProduct})
-})
+
 
 module.exports = router

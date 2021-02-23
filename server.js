@@ -3,7 +3,7 @@ require('dotenv').config()
 const db = require("./routes/models")
 
 const personasController = require("./Controller/personasController")
-app.use("/users", personasController);
+app.use("/usuarios", personasController);
 
 const productodController = require("./Controller/productosController")
 app.use("/productos", productodController)
@@ -11,15 +11,19 @@ app.use("/productos", productodController)
 const pedidosController = require("./Controller/pedidosController")
 app.use("/pedidos", pedidosController)
 
+const inicioController = require("./Controller/inicioController")
+app.use("/inicio", inicioController)
+
 
 //ASSOCIATIONS
-db.Users.hasMany(db.Pedidos)
-db.Pedidos.belongsTo(db.Users)
+db.Usuarios.hasMany(db.Pedidos)
+db.Pedidos.belongsTo(db.Usuarios)
 
 db.Pedidos.hasMany(db.Detalle_Pedidos)
 db.Detalle_Pedidos.belongsTo(db.Pedidos)
 
-
+db.Estados.hasMany(db.Pedidos)
+db.Pedidos.belongsTo(db.Estados)
 
 
 
