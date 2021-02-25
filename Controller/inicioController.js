@@ -51,17 +51,28 @@ router.post("/productosIniciales", validacionJwt, async (req,res) => {
     });
     res.status(200).json({msj: "Productos creados con exito",newProduct})
 
-    const newEstados =[{
+    const newEstados =[
+        {
+            id:1,
             estado: "Nuevo"
-        },{
+        },
+        {
+            id:2,
             estado: "Confirmado"
-        },{
+        },
+        {
+            id:3,
             estado: "Preparando"
-        },{
+        },
+        {
+            id:4,
             estado: "Enviando"
-        },{
+        },
+        {
+            id:5,
             estado: "Entregado"
-    }]
+        }
+]
     newEstados.forEach(e => {
        models.Estados.create(e)
     })

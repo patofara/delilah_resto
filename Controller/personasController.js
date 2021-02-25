@@ -5,7 +5,7 @@ const USERS = models.Usuarios
 var {datosRecibidos,validacionJwt,datosLogin} = require("../routes/middlewares")
 
 
-// CREAR USUARIO
+// CREAR USUARIO LISTO *FALTA SCHEMA*
 router.post("/", datosRecibidos,  async (req,res) => {
     const {usuario,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
     const newUser = {
@@ -40,81 +40,48 @@ router.post("/login", datosLogin, (req,res) => {
 })
 
 
-// TRAE TODOS LOS USUARIOS , SOLO ADMINS
+// TRAE TODOS LOS USUARIOS * admin* , TRAE EL USUARIO DEL CLIENTE *cliente* LISTO *FALTA SCHEMA*
 router.get("/", validacionJwt, async (req,res) => {
     if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
+        const findUser = await USERS.findOne({
+            where : {usuario: req.user.nombreUser}
+        });
+        if(findUser) return res.status(200).json(findUser) 
+        return res.status(400).json({error : "No se pudo realizar la consulta..."})
     }
     const consulta = await USERS.findAll()
     if(consulta) return res.status(200).json(consulta) 
-    return res.status(200).json({error : "No se pudo realizar la consulta..."}) 
-})
-
-// TRAE TU USUARIO , *SOLO CLIENTES*
-router.get("/miUsuario", validacionJwt, async (req,res) => {
-    if(req.user.isAdmin==true){
-        res.send('Debes incluir un ID');
-        return
-    }
-    const findUser = await USERS.findOne({
-        where : {usuario: req.user.nombreUser}
-    });
-    if(findUser) return res.status(200).json(findUser) 
-    return res.status(200).json({error : "No se pudo realizar la consulta..."}) 
+    return res.status(400).json({error : "No se pudo realizar la consulta..."}) 
 })
 
 
-// TRAE USUARIO POR ID , *SOLO ADMIN*
-router.get("/:id", validacionJwt, async (req,res) => { 
-    if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
-    }
+// TRAE USUARIO POR ID , *SOLO ADMIN* LISTO * falta schema
+router.get("/:usuario", validacionJwt, async (req,res) => { 
+    if(req.user.isAdmin==false) return res.status(401).json({error : "No esta autorizado..."})
     const findUser = await USERS.findOne({
-        where : {id: req.params.id}
+        where : {usuario: req.params.usuario}
     });
     if(findUser) return res.status(200).json(findUser)
-    return res.status(400).json({error : "No se encontro ID..."})
+    return res.status(400).json({error : "No se encontro Usuario..."})
 })
 
-// MODIFICA POR ID , SOLO PARA ADMINS
-// router.put("/:id",validacionJwt ,async (req,res) =>{ // para que soolo se pueda modificar con el token
-//     if(req.user.isAdmin==false){
-//         res.send('No está autorizado');
-//         return
-//     }
-//     const actualizarUser = await USERS.update(req.body,{
-//         where : {id: req.params.id}
-//     });
-//     if(actualizarUser[0]) return res.status(200).json({exito: "Acutalizado con exito..."})
-//     return res.status(400).json({error : "No se encontro ID..."})
-// })
-
-// MODIFICAR USUARIO , *SOLO CLIENTES*
+// MODIFICAR USUARIO , *SOLO CLIENTES* LISTO * falta schema
 router.put("/miUsuario",validacionJwt, async (req,res) =>{ // para que soolo se pueda modificar con el token
-    console.log(req.user);
-    if(req.user.isAdmin==true){
-        res.send('No estas autorizado');
-        return
-    }
+    if(req.user.isAdmin==true) return res.status(401).json({error : "No esta autorizado.."})
     const actualizarUser = await USERS.update(req.body,{
         where : {usuario: req.user.nombreUser}
     });
     if(actualizarUser[0]) return res.status(200).json({exito: "Acutalizado con exito..."})
-    return res.status(400).json({error : "No se encontro ID..."})
+    return res.status(400).json({error : "No se encontro usuario..."})
 })
 
-router.delete("/:id",validacionJwt , async (req,res) =>{
-    if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
-    }
+router.delete("/:usuario",validacionJwt , async (req,res) =>{
+    if(req.user.isAdmin==false) return res.status(401).json({error : "No esta autorizado..."})
     const deleteUser = await USERS.destroy({
-        where : {id: req.params.id}
+        where : {id: req.params.usuario}
     });
     if(deleteUser != 0) return res.status(200).json({exito: "Borrado con exito..."})
-    return res.status(400).json({error : "No se encontro ID..."})
+    return res.status(400).json({error : "No se encontro usuario..."})
 })
 
 

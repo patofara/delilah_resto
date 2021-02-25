@@ -64,7 +64,7 @@ const datosRecibidos = (req, res, next) => {
 const datosLogin = async (req, res, next) => {
     const {usuario, password } = req.body
     if (!usuario || !password) {
-        res.status(400).json({
+        res.status(402).json({
             error: 'faltan campos'
         })
     }

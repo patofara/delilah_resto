@@ -91,10 +91,12 @@ router.put("/:id", validacionJwt, async(req,res) => {
 // OBTIENE TODOS LOS PEDIDOS *SOLO ADMINS*
 router.get("/", validacionJwt, async (req,res) => {
     if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
+        return res.send('No está autorizado');
     }
     const pedidos = await models.Pedidos.findAll()
+    if (pedidos.length==0) {
+        return res.send("No hay pedidos")
+    }
     let arrayPedidos = []
     for (let i = 0; i < pedidos.length; i++) {
         let arrayDetalle = []

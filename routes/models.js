@@ -1,6 +1,6 @@
 const conexion = require("./conexion")
 const sequelize = conexion.sequelize
-const {Model, DataTypes, Association} = require('sequelize');
+const {Model, DataTypes} = require('sequelize');
 
 
 sequelize.define()
@@ -62,7 +62,6 @@ class Estados extends Model {}
 Estados.init({
         id : {
             type: DataTypes.INTEGER,
-            autoIncrement: true,
             primaryKey: true
         },
         estado: {type:DataTypes.STRING,allowNull: false}
