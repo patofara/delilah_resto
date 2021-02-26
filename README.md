@@ -24,12 +24,9 @@ Se listarán los endpoints y métodos disponibles y la información necesaria pa
 ## Instalación e inicializacion del proyecto
 
 ### 1 - Clonar proyecto
-
-Clonar el repositorio desde el [siguiente link](https://github.com/guido732/delilah-resto).
-
 Desde la consola con el siguiente link:
 
-`git clone https://github.com/guido732/delilah-resto.git .`
+`git clone https://github.com/patofara/delilah_resto.git .`
 
 ### 2 - Instalación de dependencias
 
@@ -43,19 +40,15 @@ npm install
 - Inicializar los servicios de Apache y MySQL
 - Abrir el panel de control del servicio MySQL
 - Generar una nueva base de datos llamada `delilah_resto` desde el panel de control
-- Abrir el archivo en `/database/queries.sql` y dentro del `panel de control` de la base de datos ejecutar la serie de queries del archivo o importar el mismo.
-
 ### 4 - Iniciando el servidor
 
-Abrir el archivo en `/server/server.js` desde node
+Desde la terminal poner el siguiente comando :
 
-`node server`
+node server.js
 
 ### 5 - Listo para usar!
 
 Testear los endpoints provistos desde postman para poder hacer uso de la API y base de datos generadas
-
-[Colección de Postman](https://documenter.getpostman.com/view/10237996/SzYdSbvb)
 
 (Asegurarse de seleccionar el entorno de desarrollo `Delilah Restó` para poder acceder a las variables globales)
 
@@ -83,12 +76,9 @@ A list of the available endpoints and methods will be listed with the necessary 
 ## Instalation and Project Initialization
 
 ### 1 - Clone Project
-
-Clone the repository from the [link](https://github.com/guido732/delilah-resto).
-
 You can also clone it from your terminal:
 
-`git clone https://github.com/guido732/delilah-resto.git .`
+`git clone https://github.com/patofara/delilah_resto.git .`
 
 ### 2 - Install the required dependencies
 
@@ -102,18 +92,15 @@ npm install
 - Start the Apache and MySQL services
 - Open the Admin panel for the MySQL Service
 - Create a new database called `delilah_resto` from the panel
-- Open the file located in `/database/queries.sql` and from the `control panel` input via the SQL input section the content to create the tables and populate them with mock values
 
 ### 4 - Starting the server
 
-From your node terminal open the file located in `/server/server.js`
+From the terminal put the following command:
 
-`node server`
+node server.js
 
 ### 5 - It's ready to use!
 
 You can now test the provided endpoints from the Postman collection to make use of the API and database connection
-
-[Postman collection](https://documenter.getpostman.com/view/10237996/SzYdSbvb)
 
 (Make sure the `Delilah Restó` enviroment is selected so you can access the enviroment variables)
