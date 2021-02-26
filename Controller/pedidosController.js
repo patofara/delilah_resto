@@ -17,7 +17,7 @@ router.post("/", verificarPedido, validacionJwt, async (req,res) => {
         const articuloStock = await models.Productos.findOne({
             where : {id: element}
         }); 
-        if (articuloStock.dataValues.stock <=0) return res.status(200).json({msj: `Sin stock de ${articuloStock.dataValues.nombre}`})
+        if (articuloStock.dataValues.stock <=0) return res.status(401).json({msj: `Sin stock de ${articuloStock.dataValues.nombre}`})
     }
        
     var total_pedido = 0
@@ -91,12 +91,31 @@ router.put("/:id", validacionJwt, async(req,res) => {
 // OBTIENE TODOS LOS PEDIDOS *SOLO ADMINS*
 router.get("/", validacionJwt, async (req,res) => {
     if(req.user.isAdmin==false){
-        return res.send('No está autorizado');
+        let detalleProductos = []
+        const user = await models.Usuarios.findOne({
+            where : {usuario: req.user.nombreUser}
+        });
+        const pedido = await models.Pedidos.findOne({
+            where : {UserId: user.id}
+        });
+        if(!pedido){
+            return res.status(401).json({error : "No hizo ningun pedido"})
+        }
+        const detalles = await models.Detalle_Pedidos.findAll({
+            where : {PedidoId: pedido.id}
+        });
+        detalles.forEach(element => {
+            detalleProductos.push(element.cantidadProducto)
+            detalleProductos.push(element.nombreProducto)
+        });
+        return res.status(200).json({
+            Detalle: detalleProductos.join(" "),
+            "A pagar": `$${pedido.total_pedido}`,
+            "Medio de pago": pedido.forma_pago
+        })
     }
     const pedidos = await models.Pedidos.findAll()
-    if (pedidos.length==0) {
-        return res.send("No hay pedidos")
-    }
+    if (pedidos.length==0) res.status(201).json("No hay pedidos")
     let arrayPedidos = []
     for (let i = 0; i < pedidos.length; i++) {
         let arrayDetalle = []
@@ -117,42 +136,19 @@ router.get("/", validacionJwt, async (req,res) => {
     return res.status(200).json(arrayPedidos)
 })
 
-// CONSULTA PEDIDO CLIENTE
-router.get("/myPedido", validacionJwt, async (req,res) => {
-    if(req.user.isAdmin==true){
-        res.send('No está autorizado');
-        return
-    }
-    let detalleProductos = []
-    const user = await models.Usuarios.findOne({
-        where : {usuario: req.user.nombreUser}
-    });
+
+router.get("/:id", validacionJwt, async (req,res) => {
+    if(req.user.isAdmin==false) res.status(401).json("No esta autorizado")
     const pedido = await models.Pedidos.findOne({
-        where : {UserId: user.id}
-    });
-    if(!pedido){
-        return res.status(400).json({error : "No hizo ningun pedido"})
-    }
-    const detalles = await models.Detalle_Pedidos.findAll({
-        where : {PedidoId: pedido.id}
-    });
-    detalles.forEach(element => {
-        detalleProductos.push(element.cantidadProducto)
-        detalleProductos.push(element.nombreProducto)
-    });
-    return res.status(200).json({
-        Detalle: detalleProductos.join(" "),
-        "A pagar": `$${pedido.total_pedido}`,
-        "Medio de pago": pedido.forma_pago
+        where = {id: req.params.id}
     })
+    if (pedido) return res.status(200).json(pedido)
+    else return res.status(400).json("No se encontro ID")
 })
 
 //BORRAR PEDIDO CON ID, *SOLO ADMIN*
 router.delete("/:id", validacionJwt,async (req,res) => {
-    if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
-    }
+    if(req.user.isAdmin==false) return res.status(401).json({error : "No esta autorizado.."})
     const pedido = await models.Pedidos.destroy({
         where : {id: req.params.id}
     });

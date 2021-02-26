@@ -30,7 +30,7 @@ router.post("/", validacionJwt ,verificarProducto, async (req,res) => {
 router.get("/", async (req,res) => {
     const consulta = await PRODUCTOS.findAll()
     if(consulta) return res.status(200).json(consulta) 
-    return res.status(200).json({error : "No se pudo realizar la consulta..."})
+    return res.status(400).json({error : "No se pudo realizar la consulta..."})
 })
 
 // CONSULTAR PRODUCTO POR ID
@@ -44,10 +44,7 @@ router.get("/:id", async (req,res) => {
 
 // ACTUALIZAR UN PRODUCTO POR ID, *SOLO ADMINS*
 router.put("/:id", validacionJwt, async (req,res) =>{
-    if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
-    }
+    if(req.user.isAdmin==false) return res.status(401).json({error : "No esta autorizado"})
     const actualizarProducto = await PRODUCTOS.update(req.body,{
         where : {id: req.params.id}
     });
@@ -60,10 +57,7 @@ router.put("/:id", validacionJwt, async (req,res) =>{
 
 // BORRAR PRODUCTO POR ID , *SOLO ADMINS*
 router.delete("/:id", validacionJwt, async (req,res) =>{
-    if(req.user.isAdmin==false){
-        res.send('No está autorizado');
-        return
-    }
+    if(req.user.isAdmin==false)  return res.status(401).json({error : "No esta autorizado"})
     const verProducto = await PRODUCTOS.findOne({
         where: {id : req.params.id}
     })

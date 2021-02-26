@@ -1,0 +1,472 @@
+openapi: 3.0.0
+servers:
+  - description: ServidorLocal
+    url: 'http://localhost:3000'
+info:
+  version: 1.0.0
+  title: Delilah Resto
+  description:  API de pedidos online para un restaurante.
+tags:
+  - name: Usuarios
+    description: CRUD USUARIOS
+  - name: Productos
+    description: CRUD PRODUCTOS
+  - name: Pedidos
+    description: CRUD PEDIDOS
+paths:
+  /usuarios:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener listado de todos los usuarios (Admins) o la cuenta del usuario(not Admin)
+      description: Obtiene todos los usuarios si el usuario que hace el request es admin , si no trae el usuario especifico si no es admin
+      security:
+        - autenticacionJWT: []
+      responses:
+        '200':
+          description: Operacion Exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioInfo'
+        '400':
+          description: No se pudo realizar la consulta.
+    post:
+      tags:
+        - Usuarios
+      summary: Crear Usuario
+      description: Crea un usuario en la base de datos
+      requestBody:
+        description: Crear Objeto de nuevo usuario
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Usuario"
+        required: true
+      responses:
+        '200':
+          description: Usuario creado
+        '400':
+          description: No se pudo crear el usuario
+  /usuarios/:{usuario}:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtiene usuario por nombre de Usuario
+      description: Obtener usuario
+      security:
+        - autenticacionJWT: []
+      parameters:
+        - name: Usuario
+          in: path
+          description: Usuario que desea encontrar.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsuarioInfo"
+        400:
+          description: No se encontro usuario
+        401:
+          description: No esta autorizado
+    delete:
+      tags:
+        - Usuarios
+      summary: Borrar cuentas de usuario (solo Admin)
+      security:
+        - autenticacionJWT: []
+      responses:
+        200:
+          description: Usuario borrado con exito
+        401:
+          description: No esta autorizado
+        400:
+          description: No se encontro usuario
+  /usuarios/miUsuario:
+    put:
+      tags:
+        - Usuarios
+      summary: Editar datos de usuario (solo usuarios)
+      description: Modifica datos en las cuentas de los usuarios.
+      security:
+        - autenticacionJWT: []
+      requestBody:
+        description: Actualizacion de los datos
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Usuario"
+      responses:
+        200:
+          description: Usuario modificado correctamente
+        401:
+          description: No esta autorizado
+        400:
+          description: No se encontro usuario
+  /usuarios/login:
+    post:
+      tags:
+        - Usuarios
+      security: []
+      summary: Logueo de usuarios
+      description: Logueo para obtener TOKEN
+      requestBody:
+        description: Crear Objeto de login
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioLogin"
+        required: true
+      responses:
+        200:
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        401:
+          description: Usuario o password invalidos
+        402:
+          description: Faltan campos en el objeto
+  /productos:
+    get:
+      tags:
+        - Productos
+      summary: Obtener lista de productos
+      description: Lista todos los productos
+      responses:
+        200:
+          description: Operacion Exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Productos"
+        400:
+          description: No se pudo realizar la operacion...
+    post:
+      tags:
+        - Productos
+      summary: Agregar producto (solo Admin)
+      description: Agregar producto a la base de datos
+      security:
+        - autenticacionJWT: []
+      requestBody:
+        description: Crear objeto del producto
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Producto"
+        required: true
+      responses:
+        200:
+          description: Producto agregado con exito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Producto"
+        400:
+          description: No se pudo crear el producto
+  /productos/:{id}:
+    get:
+      tags:
+        - Productos
+      summary: Obtener productos por ID
+      description: Retorna el producto indicado por parametro
+      parameters:
+        - name: id
+          in: path
+          description: ID del producto
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Operacion Exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Producto"
+        400:
+          description: ID incorrecto
+    put:
+      tags:
+        - Productos
+      summary: Editar productos (solo Admin)
+      description: Edita productos por ID
+      security:
+        - autenticacionJWT: []
+      parameters:
+        - name: id
+          in: path
+          description: ID del producto a modificar
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Datos a modificar
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Producto'
+        required: true
+      responses:
+        200:
+          description: "Producto actualizado con exito {producto}"
+        400:
+          description: No se encontro ID
+        401:
+          description: No esta autorizado
+    delete:
+      tags:
+        - Productos
+      summary: Eliminar productos (solo Admin)
+      description: Elimina un producto por ID
+      parameters:
+        - name: id
+          in: path
+          description: ID del producto a eliminar.
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Producto eliminado con exito {producto}"
+        400:
+          description: No se encontro ID
+        401:
+          description: No esta autorizado
+  /pedidos:
+    get:
+      tags:
+        - Pedidos
+      summary: Lista los pedidos
+      description: Si es admin retorna todos los pedidos, si es cliente , retorna solo los pedidos del mismo
+      responses:
+        200:
+          description: Operacion exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pedidos"
+        401:
+          description: No hizo ningun pedidos
+        201:
+          description: No hay pedidos
+    post:
+      tags:
+        - Pedidos
+      summary: Agregar pedidos
+      description: Agregar pedidos a la base de datos
+      requestBody:
+        description: Objeto del pedido a crear
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/nuevoPedido"
+        required: true
+      responses:
+        200:
+          description: Pedido creado con exito
+        400:
+          description: Ha ocurrido un error
+        401:
+          description: Sin Stock
+  /pedidos/:{id}:
+    get:
+      tags:
+        - Pedidos
+      summary: Obtener pedidos por ID (solo Admin)
+      parameters:
+        - name: id
+          in: path
+          description: Numero de pedido
+          required: true
+          schema:
+            type: integer
+      description: Retorna el pedido de ese ID
+      responses:
+        200:
+          description: Operacion Exitosa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pedidos"
+        400:
+          description: No se encontro ID
+        401:
+          description: No esta autorizado
+    put:
+      tags:
+        - Pedidos
+      summary: Actualizar estado pedido
+      description: Actualiza estado de pedidos por ID (solo Admin), solo con hacer put se actualiza
+      parameters:
+        - name: id
+          in: path
+          description: ID de pedido a actualizar estado
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Producto paso de {estado1} a {estado2}
+        400:
+          description: No se encontro ID
+    delete:
+      tags:
+        - Pedidos
+      summary: Eliminar pedidos (solo Admin)
+      description: Elimina un pedido por ID
+      parameters:
+        - name: id
+          in: path
+          description: ID del pedido a eliminar.
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: "Pedido eliminado con exito {producto}"
+        400:
+          description: No se encontro ID
+        401:
+          description: No esta autorizado
+
+components:
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        usuario:
+          type: string
+          example: javi
+        nombre:
+          type: string
+          example: Javier
+        apellido:
+          type: string
+          example: Paz
+        email:
+          type: string
+          example: javi@gmail.com
+        telefono:
+          type: integer
+          example: 5491122223333
+        direccion:
+          type: string
+          example: Fake St. 123
+        password:
+          type: string
+          example: MySecretPass123!!
+    UsuarioInfo:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            example: 1
+          usuario:
+            type: string
+            example: javi
+          nombre:
+            type: string
+            example: Javier
+          apellido:
+            type: string
+            example: Paz
+          email:
+            type: string
+            example: javi@gmail.com
+          telefono:
+            type: integer
+            example: 5491122223333
+          direccion:
+            type: string
+            example: Fake St. 123
+          password:
+            type: string
+            example: MySecretPass123!!
+          is_admin:
+            type: boolean
+            example: 0
+    UsuarioLogin:
+      type: object
+      properties:
+        usuario:
+          type: string
+          example: javi
+        password:
+          type: string
+          example: MySecretPass123!!
+    Producto:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: Pizza
+        descripcion:
+          type: string
+          example: piiza napolitana
+        foto:
+          type: string
+          example: https://truffle-assets.imgix.net/7fae7223-pizza-napolitana_s_thumb.jpg
+        stock:
+          type: integer
+          example: 100
+        favorito:
+          type: boolean
+          example: false
+        precio:
+          type: integer
+          example: 500
+    Productos:
+      type: array
+      items:
+        $ref: "#/components/schemas/Producto"
+    nuevoPedido:
+      type: object
+      properties:
+        idProducto:
+          type: array
+          example: 3,4,5
+        cantidad:
+          type: array
+          example: 10,2,5
+        forma_pago:
+          type: string
+          example: Efectivo
+      Pedidos:
+        type: object
+        properties:
+          "Nro Pedido":
+            type: integer
+            example: 3
+          "Valor pedido":
+            type: integer
+            example: 1000
+          detalle:
+            type: string
+            example: 2 Tacos
+        
+      
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+      
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

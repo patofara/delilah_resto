@@ -5,9 +5,9 @@ const USERS = models.Usuarios
 var {datosRecibidos,validacionJwt,datosLogin} = require("../routes/middlewares")
 
 
-// CREAR USUARIO LISTO *FALTA SCHEMA*
+// CREAR USUARIO LISTO 
 router.post("/", datosRecibidos,  async (req,res) => {
-    const {usuario,nombre,apellido,email,telefono,direccion,password,isAdmin} = req.body
+    const {usuario,nombre,apellido,email,telefono,direccion,password} = req.body
     const newUser = {
         usuario,
         nombre,
@@ -16,7 +16,7 @@ router.post("/", datosRecibidos,  async (req,res) => {
         telefono,
         direccion,
         password,
-        isAdmin
+        isAdmin: false
     }
     const validarNombre = await models.Usuarios.findOne({
         where : {usuario:usuario}
@@ -31,7 +31,7 @@ router.post("/", datosRecibidos,  async (req,res) => {
     else return res.status(200).json({error: "Ha ocurrido un error..."})
 })
 
-// LOGUEAR PARA RECIRIR TOKEN
+// LOGUEAR PARA RECIRIR TOKEN LISTO
 router.post("/login", datosLogin, (req,res) => {
     res.status(200).status(200).json({exito:{
         token : req.token,
@@ -40,7 +40,7 @@ router.post("/login", datosLogin, (req,res) => {
 })
 
 
-// TRAE TODOS LOS USUARIOS * admin* , TRAE EL USUARIO DEL CLIENTE *cliente* LISTO *FALTA SCHEMA*
+// TRAE TODOS LOS USUARIOS * admin* , TRAE EL USUARIO DEL CLIENTE *cliente* LISTO 
 router.get("/", validacionJwt, async (req,res) => {
     if(req.user.isAdmin==false){
         const findUser = await USERS.findOne({
@@ -55,7 +55,7 @@ router.get("/", validacionJwt, async (req,res) => {
 })
 
 
-// TRAE USUARIO POR ID , *SOLO ADMIN* LISTO * falta schema
+// TRAE USUARIO POR ID , *SOLO ADMIN* LISTO 
 router.get("/:usuario", validacionJwt, async (req,res) => { 
     if(req.user.isAdmin==false) return res.status(401).json({error : "No esta autorizado..."})
     const findUser = await USERS.findOne({
