@@ -17,7 +17,7 @@ El objetivo del trabajo es generar el backend de una app de pedidos de comida ll
 
 ## Documentación de la API
 
-Abrir el archivo `api-docs.yaml` y copiar su contenido en [Swagger](https://editor.swagger.io/) o importar el mismo desde las opciones
+Abrir el archivo `swagger.yaml` y copiar su contenido en [Swagger](https://editor.swagger.io/) o importar el mismo desde las opciones
 
 Se listarán los endpoints y métodos disponibles y la información necesaria para hacer uso de los mismos
 
@@ -69,7 +69,7 @@ The goal of the project was to generate the backend for a food app called "Delil
 
 ## API Documentation
 
-Open the `api-docs.yaml` file and copy it's content in [Swagger](https://editor.swagger.io/) or import it from the options panel.
+Open the `swagger.yaml` file and copy it's content in [Swagger](https://editor.swagger.io/) or import it from the options panel.
 
 A list of the available endpoints and methods will be listed with the necessary information to use the API
 
